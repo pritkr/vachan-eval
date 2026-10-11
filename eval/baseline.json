@@ -1,0 +1,13 @@
+{
+  "model": "mock",
+  "seed": 7,
+  "n": 30,
+  "metrics": {
+    "mean_wer": 0.1617,
+    "mean_cer": 0.1181,
+    "cat:easy": 0.0286,
+    "cat:hard": 0.2029,
+    "cat:medium": 0.123,
+    "cat:noise": 0.1111
+  }
+}

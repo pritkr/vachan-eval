@@ -1,0 +1,302 @@
+[
+  {
+    "id": "ration-01",
+    "lang": "hi",
+    "domain": "ration",
+    "difficulty": "easy",
+    "expected": "मेरा राशन कार्ड में नाम कैसे जुड़वाऊं",
+    "audio_hint": "clear studio mic, slow speech",
+    "notes": "baseline Hindi ration query",
+    "category": "easy"
+  },
+  {
+    "id": "ration-02",
+    "lang": "hi",
+    "domain": "ration",
+    "difficulty": "medium",
+    "expected": "राशन कार्ड में मोबाइल नंबर अपडेट करना है",
+    "audio_hint": "phone mic, street noise",
+    "notes": "entity: mobile number update",
+    "category": "medium"
+  },
+  {
+    "id": "ration-03",
+    "lang": "bho",
+    "domain": "ration",
+    "difficulty": "hard",
+    "expected": "हमार राशन कार्ड में अनाज काहे ना मिलल",
+    "audio_hint": "Bhojpuri dialect, field recording",
+    "notes": "dialect shift: hamar/kaahe/na milal",
+    "category": "hard"
+  },
+  {
+    "id": "ration-04",
+    "lang": "mag",
+    "domain": "ration",
+    "difficulty": "hard",
+    "expected": "राशन दुकान वाला अंगूठा लगावे कह हथिन",
+    "audio_hint": "Magahi, low-end phone",
+    "notes": "eKYC thumb-impression query",
+    "category": "hard"
+  },
+  {
+    "id": "ration-05",
+    "lang": "hi",
+    "domain": "ration",
+    "difficulty": "medium",
+    "expected": "नया राशन कार्ड बनवाने में कितना समय लगता है",
+    "audio_hint": "normal room",
+    "notes": "duration question",
+    "category": "medium"
+  },
+  {
+    "id": "scholar-01",
+    "lang": "hi",
+    "domain": "scholarship",
+    "difficulty": "easy",
+    "expected": "मुख्यमंत्री कन्या उत्थान योजना के लिए आवेदन कैसे करें",
+    "audio_hint": "clear",
+    "notes": "Bihar flagship scheme",
+    "category": "easy"
+  },
+  {
+    "id": "scholar-02",
+    "lang": "hi",
+    "domain": "scholarship",
+    "difficulty": "medium",
+    "expected": "छात्रवृत्ति का पैसा खाते में कब आएगा",
+    "audio_hint": "phone mic",
+    "notes": "payment-status query",
+    "category": "medium"
+  },
+  {
+    "id": "scholar-03",
+    "lang": "bho",
+    "domain": "scholarship",
+    "difficulty": "hard",
+    "expected": "हमार बेटी के स्कॉलरशिप के पैसा अबहीं ले ना आइल",
+    "audio_hint": "Bhojpuri female speaker, courtyard noise",
+    "notes": "code-mixed scholarship",
+    "category": "hard"
+  },
+  {
+    "id": "scholar-04",
+    "lang": "hi",
+    "domain": "scholarship",
+    "difficulty": "medium",
+    "expected": "दसवीं पास छात्र के लिए कौन सी छात्रवृत्ति है",
+    "audio_hint": "classroom echo",
+    "notes": "eligibility query",
+    "category": "medium"
+  },
+  {
+    "id": "scholar-05",
+    "lang": "mag",
+    "domain": "scholarship",
+    "difficulty": "hard",
+    "expected": "पोशाक योजना के पैसा कब देथिन स्कूल में",
+    "audio_hint": "Magahi, child speaker",
+    "notes": "poshak yojana, child voice",
+    "category": "hard"
+  },
+  {
+    "id": "rte-01",
+    "lang": "hi",
+    "domain": "rte-admission",
+    "difficulty": "easy",
+    "expected": "आरटीई के तहत प्राइवेट स्कूल में मुफ्त दाखिला कैसे मिलेगा",
+    "audio_hint": "clear",
+    "notes": "RTE 25% quota baseline",
+    "category": "easy"
+  },
+  {
+    "id": "rte-02",
+    "lang": "hi",
+    "domain": "rte-admission",
+    "difficulty": "medium",
+    "expected": "बच्चे के दाखिले के लिए कौन से कागजात चाहिए",
+    "audio_hint": "room + fan noise",
+    "notes": "document list query",
+    "category": "medium"
+  },
+  {
+    "id": "rte-03",
+    "lang": "bho",
+    "domain": "rte-admission",
+    "difficulty": "hard",
+    "expected": "हमार लइका के उमर पाँच साल बा दाखिला हो जाई",
+    "audio_hint": "Bhojpuri, outdoor",
+    "notes": "age-eligibility, dialect",
+    "category": "hard"
+  },
+  {
+    "id": "rte-04",
+    "lang": "hi",
+    "domain": "rte-admission",
+    "difficulty": "medium",
+    "expected": "आरटीई आवेदन की आखिरी तारीख क्या है",
+    "audio_hint": "phone mic, fast speech",
+    "notes": "deadline query, fast speech",
+    "category": "medium"
+  },
+  {
+    "id": "rte-05",
+    "lang": "mag",
+    "domain": "rte-admission",
+    "difficulty": "hard",
+    "expected": "इसकूल में नाम लिखावे ला कहाँ आवेदन करे परतौ",
+    "audio_hint": "Magahi elder speaker",
+    "notes": "where-to-apply, heavy dialect",
+    "category": "hard"
+  },
+  {
+    "id": "pension-01",
+    "lang": "hi",
+    "domain": "pension",
+    "difficulty": "easy",
+    "expected": "वृद्धा पेंशन योजना में आवेदन कैसे करें",
+    "audio_hint": "clear",
+    "notes": "old-age pension baseline",
+    "category": "easy"
+  },
+  {
+    "id": "pension-02",
+    "lang": "bho",
+    "domain": "pension",
+    "difficulty": "hard",
+    "expected": "हमार दादी के पेंशन तीन महीना से बंद बा",
+    "audio_hint": "Bhojpuri, weak signal",
+    "notes": "stopped-payment grievance",
+    "category": "hard"
+  },
+  {
+    "id": "pension-03",
+    "lang": "hi",
+    "domain": "pension",
+    "difficulty": "medium",
+    "expected": "पेंशन के लिए आधार कार्ड जरूरी है क्या",
+    "audio_hint": "normal",
+    "notes": "aadhaar requirement",
+    "category": "medium"
+  },
+  {
+    "id": "health-01",
+    "lang": "hi",
+    "domain": "health",
+    "difficulty": "easy",
+    "expected": "आयुष्मान कार्ड कैसे बनवाएं",
+    "audio_hint": "clear",
+    "notes": "ayushman card",
+    "category": "easy"
+  },
+  {
+    "id": "health-02",
+    "lang": "bho",
+    "domain": "health",
+    "difficulty": "hard",
+    "expected": "आशा दीदी टीका लगावे कब अइहें गाँव में",
+    "audio_hint": "Bhojpuri, crowd noise",
+    "notes": "vaccination visit query",
+    "category": "hard"
+  },
+  {
+    "id": "mixed-01",
+    "lang": "hi",
+    "domain": "ration",
+    "difficulty": "medium",
+    "expected": "राशन eKYC ऑनलाइन कर सकते हैं क्या मोबाइल से",
+    "audio_hint": "code-mixed eKYC + mobile",
+    "notes": "Hinglish code-mix: eKYC, online, mobile",
+    "category": "medium"
+  },
+  {
+    "id": "mixed-02",
+    "lang": "hi",
+    "domain": "scholarship",
+    "difficulty": "medium",
+    "expected": "स्कॉलरशिप का स्टेटस वेबसाइट पर कैसे चेक करें",
+    "audio_hint": "code-mixed status/website/check",
+    "notes": "Hinglish code-mix",
+    "category": "medium"
+  },
+  {
+    "id": "mixed-03",
+    "lang": "hi",
+    "domain": "rte-admission",
+    "difficulty": "medium",
+    "expected": "स्कूल एडमिशन के लिए ऑनलाइन फॉर्म भरना है",
+    "audio_hint": "code-mixed school/admission/online/form",
+    "notes": "Hinglish code-mix",
+    "category": "medium"
+  },
+  {
+    "id": "noise-01",
+    "lang": "hi",
+    "domain": "ration",
+    "difficulty": "hard",
+    "expected": "डीलर ज्यादा पैसा मांग रहा है शिकायत कहां करें",
+    "audio_hint": "heavy market noise, overlapping speech",
+    "notes": "grievance under noise",
+    "category": "noise"
+  },
+  {
+    "id": "noise-02",
+    "lang": "bho",
+    "domain": "pension",
+    "difficulty": "hard",
+    "expected": "बैंक खाता में पैसा ना आइल केकरा से बतियाईं",
+    "audio_hint": "Bhojpuri + traffic noise, fast",
+    "notes": "hardest: dialect + noise + fast",
+    "category": "noise"
+  },
+  {
+    "id": "adv-01",
+    "lang": "hi",
+    "domain": "scholarship",
+    "difficulty": "hard",
+    "category": "adversarial",
+    "expected": "दीन दयाल योजना में दिन में आवेदन कैसे करें",
+    "audio_hint": "homophone pair दीन/दीन vs दिन",
+    "notes": "adversarial: homophone दीन/दिन"
+  },
+  {
+    "id": "adv-02",
+    "lang": "hi",
+    "domain": "pension",
+    "difficulty": "hard",
+    "category": "adversarial",
+    "expected": "EPFO पोर्टल पर UAN नंबर से eKYC स्टेटस चेक करें",
+    "audio_hint": "dense Hinglish acronyms",
+    "notes": "adversarial: code-mixed EPFO/UAN/eKYC"
+  },
+  {
+    "id": "adv-03",
+    "lang": "hi",
+    "domain": "ration",
+    "difficulty": "hard",
+    "category": "adversarial",
+    "expected": "मेरा राशन कार्ड में नाम जुड़",
+    "audio_hint": "audio cuts off mid-word at 2.1s",
+    "notes": "adversarial: truncated utterance"
+  },
+  {
+    "id": "adv-04",
+    "lang": "bho",
+    "domain": "ration",
+    "difficulty": "hard",
+    "category": "adversarial",
+    "expected": "समान मजूरी पर राशन के सामान ना मिलल",
+    "audio_hint": "Bhojpuri + homophone समान/सामान",
+    "notes": "adversarial: homophone समान/सामान + dialect"
+  },
+  {
+    "id": "adv-05",
+    "lang": "hi",
+    "domain": "scholarship",
+    "difficulty": "hard",
+    "category": "adversarial",
+    "expected": "स्कॉलरशिप का फॉर्म भरने के लि",
+    "audio_hint": "truncated + code-mix फॉर्म",
+    "notes": "adversarial: truncated + Hinglish"
+  }
+]
