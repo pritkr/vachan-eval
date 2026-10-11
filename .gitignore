@@ -1,0 +1,20 @@
+# python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+*.egg-info/
+.venv/
+venv/
+
+# runtime artifacts (created locally, never committed)
+vachan.db
+
+# node / web build
+node_modules/
+dist/
+web/dist/
+
+# env / os
+.env
+.DS_Store
