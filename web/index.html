@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Vachan Eval — Hindi Voice AI Eval Dashboard</title>
+<style>
+  :root { --bg:#0d1117; --panel:#161b22; --line:#30363d; --txt:#e6edf3; --mut:#8b949e; --acc:#58a6ff; --ok:#3fb950; --bad:#f85149; --warn:#d29922; }
+  * { box-sizing:border-box; } body { margin:0; background:var(--bg); color:var(--txt); font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Devanagari",sans-serif; }
+  header { padding:20px 24px; border-bottom:1px solid var(--line); display:flex; gap:12px; align-items:baseline; flex-wrap:wrap; }
+  header h1 { margin:0; font-size:20px; } header .sub { color:var(--mut); }
+  .pill { font-size:12px; border:1px solid var(--line); border-radius:999px; padding:2px 10px; color:var(--mut); }
+  .pill.ok { color:var(--ok); border-color:var(--ok); } .pill.bad { color:var(--bad); border-color:var(--bad); }
+  /* two-column layout belongs to the static page only (main.grid2); the Vite
+     entry (web/src/App.jsx) renders in normal block flow inside the same shell */
+  main.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; padding:16px 24px; max-width:1200px; margin:0 auto; }
+  @media (max-width:900px){ main.grid2{grid-template-columns:1fr;} }
+  main { padding:16px 24px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:16px; }
+  .card h2 { margin:0 0 10px; font-size:15px; }
+  .mut { color:var(--mut); font-size:12.5px; }
+  textarea, input[type=text] { width:100%; background:#0d1117; color:var(--txt); border:1px solid var(--line); border-radius:8px; padding:8px; font:inherit; }
+  button { background:#238636; color:#fff; border:0; border-radius:8px; padding:8px 14px; font:inherit; cursor:pointer; }
+  button.ghost { background:transparent; border:1px solid var(--line); color:var(--txt); }
+  button:disabled { opacity:.5; cursor:wait; }
+  .row { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+  table { width:100%; border-collapse:collapse; font-size:12.5px; }
+  th,td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); }
+  th { color:var(--mut); font-weight:600; }
+  .kpi { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin:10px 0; }
+  .kpi div { background:#0d1117; border:1px solid var(--line); border-radius:8px; padding:8px; text-align:center; }
+  .kpi b { display:block; font-size:18px; }
+  /* v3 latency section */
+  .kpi4 { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin:10px 0; }
+  .kpi1 { background:#0d1117; border:1px solid var(--line); border-radius:8px; padding:8px; text-align:center; }
+  .kpi1 b { display:block; font-size:18px; }
+  .kpi1 span { font-size:11px; color:var(--mut); }
+  .kpi1.ok b { color:var(--ok); } .kpi1.bad b { color:var(--bad); }
+  .two { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px; }
+  @media (max-width:900px){ .two, .kpi4 { grid-template-columns:1fr 1fr; } }
+  h3.h3 { margin:0 0 6px; font-size:13px; }
+  code { background:#0d1117; border:1px solid var(--line); border-radius:4px; padding:0 4px; font-size:11.5px; }
+  .full { grid-column:1/-1; }
+  audio { width:100%; margin-top:8px; }
+  .err { color:var(--bad); } .oktxt { color:var(--ok); }
+  footer { padding:16px 24px; color:var(--mut); font-size:12px; text-align:center; }
+</style>
+</head>
+<body>
+<header>
+  <h1>वचन Eval</h1>
+  <span class="sub">Hindi voice-AI eval harness · mock by default · no API key</span>
+  <span class="pill" id="health">backend: …</span>
+  <span class="pill" id="gate">gate: …</span>
+  <span class="pill" id="budget">TTFT …</span>
+</header>
+<main class="grid2">
+  <div id="root"><p class="mut">Loading React… (if offline, fallback UI below renders without CDN)</p></div>
+</main>
+<footer>vachan-eval · privacy-first · mock ASR — swap in faster-whisper via VACHAN_REAL_ASR=1</footer>
+
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<!-- Vite entry. The inline app below hands ownership of #root to this bundle
+     whenever it actually loads (npm run dev / npm run build); when the module
+     cannot resolve (plain static server, file://) the inline app owns the page. -->
+<script type="module" src="/src/main.jsx"></script>
+<script>
+(function(){
+  var API = location.port === "8000" ? "" : "http://localhost:8000";
+  if (location.protocol === "file:") API = "http://localhost:8000";
+
+  function el(tag, props){ var c = Array.prototype.slice.call(arguments,2);
+    if(!window.React){ return null; } return React.createElement.apply(React,[tag,props].concat(c)); }
+
+  function LatChart(props){ // pure SVG histogram + p50/p95 markers, no chart lib
+    var rs = props.results||[]; if(!rs.length) return el("p",{className:"mut"},"No data yet — run an eval.");
+    var max = Math.max.apply(null, rs.map(function(r){return r.latency_ms;}).concat([1]));
+    var buckets = new Array(12).fill(0);
+    rs.forEach(function(r){ var i=Math.min(11,Math.floor(r.latency_ms/max*12)); buckets[i]++; });
+    var bmax = Math.max.apply(null, buckets.concat([1]));
+    var W=520,H=140,bw=W/12;
+    var bars = buckets.map(function(b,i){ var h=(b/bmax)*(H-30);
+      return el("rect",{key:i,x:i*bw+3,y:H-20-h,width:bw-6,height:h,fill:"#58a6ff",opacity:0.85,rx:2}); });
+    function x(v){ return (v/max)*W; }
+    var p50=props.summary.latency.p50_ms, p95=props.summary.latency.p95_ms;
+    return el("svg",{width:"100%",viewBox:"0 0 "+W+" "+H,role:"img","aria-label":"latency histogram"},
+      bars,
+      el("line",{x1:x(p50),x2:x(p50),y1:0,y2:H-20,stroke:"#3fb950","stroke-width":2}),
+      el("text",{x:Math.min(x(p50)+4,W-70),y:12,fill:"#3fb950","font-size":11},"p50 "+p50+"ms"),
+      el("line",{x1:x(p95),x2:x(p95),y1:0,y2:H-20,stroke:"#f85149","stroke-width":2,"stroke-dasharray":"4 3"}),
+      el("text",{x:Math.max(2,Math.min(x(p95)-70,W-80)),y:12,fill:"#f85149","font-size":11},"p95 "+p95+"ms"));
+  }
+
+  // ---- v3 latency section: TTFT vs e2e per category + cache hit rate ----
+  // pure SVG grouped bars + a hit-rate polyline + the budget rules as guides.
+  var TTFT_BUDGET_MS = 400, E2E_BUDGET_MS = 1200;
+  var LAYER_ROWS = [["endpoint","VAD endpoint"],["asr_first","ASR 1st partial"],
+    ["retrieval","retrieval"],["cache","cache lookup"],["tts_first","TTS 1st byte"],
+    ["asr_stream","ASR rest"]];
+
+  function num(v){ return (v===null||v===undefined) ? 0 : v; }
+  function moneyless(v){ return typeof v === "number" ? (Math.round(v*100)/100) : v; }
+
+  function Kpi(props){
+    return el("div",{className: props.good===undefined ? "kpi1" : (props.good ? "kpi1 ok" : "kpi1 bad")},
+      el("b",null,moneyless(props.v)+props.u), el("span",null,props.label));
+  }
+
+  function LatencySection(props){
+    var d = props.data||{}, s = d.stream||{};
+    if(!s.n) return el("p",{className:"mut"},
+      "No latency report yet — run `python3 eval/run.py --stream` or start the backend for GET /latency.");
+    var cats = Object.keys(s.by_category||{});
+    var W=720,H=340,padL=78,padB=54,padT=16;
+    var plotH=H-padB-padT, plotW=W-padL-16;
+    var max=Math.max(E2E_BUDGET_MS, Math.max.apply(null,cats.map(function(c){return s.by_category[c].e2e_p95_ms;}).concat([1])))*1.05;
+    function y(v){ return padT+plotH-(v/max)*plotH; }
+    var groupW=plotW/Math.max(1,cats.length), barW=Math.min(30,groupW/3.2);
+    var budget=d.budget||{}, cache=d.cache||{}, dual=d.dual_path||s.dual_path||{}, layers=s.layers_p95_ms||{};
+    var cached=num(cache.hit_rate), e2eP95=num(s.e2e_ms&&s.e2e_ms.p95_ms);
+
+    var grid=[0,0.25,0.5,0.75,1].map(function(f){
+      var v=Math.round(max*f);
+      return el("g",{key:f}, el("line",{x1:padL,x2:W-16,y1:y(v),y2:y(v),stroke:"#30363d","stroke-width":1}),
+        el("text",{x:padL-8,y:y(v)+4,fill:"#8b949e","font-size":10,"text-anchor":"end"},v)); });
+    var bars=cats.map(function(c,i){
+      var v=s.by_category[c], gx=padL+i*groupW, cx=gx+groupW/2;
+      return el("g",{key:c},
+        el("rect",{x:cx-barW-3,y:y(v.ttft_p95_ms),width:barW,height:Math.max(1,y(0)-y(v.ttft_p95_ms)),fill:"#58a6ff",rx:2,opacity:0.9}),
+        el("rect",{x:cx+3,y:y(v.e2e_p95_ms),width:barW,height:Math.max(1,y(0)-y(v.e2e_p95_ms)),fill:"#a371f7",rx:2,opacity:0.9}),
+        el("text",{x:cx-barW/2,y:y(v.ttft_p95_ms)-4,fill:"#58a6ff","font-size":9.5,"text-anchor":"middle"},v.ttft_p95_ms),
+        el("text",{x:cx+barW/2,y:y(v.e2e_p95_ms)-4,fill:"#a371f7","font-size":9.5,"text-anchor":"middle"},v.e2e_p95_ms),
+        el("text",{x:cx,y:H-padB+16,fill:"#e6edf3","font-size":11,"text-anchor":"middle"},c),
+        el("text",{x:cx,y:H-padB+29,fill:"#8b949e","font-size":9.5,"text-anchor":"middle"},"n="+v.n+" · hit "+Math.round(v.hit_rate*100)+"%"),
+        el("circle",{cx:cx,cy:padT+plotH-v.hit_rate*plotH,r:3.5,fill:"#3fb950"})); });
+    var line = cats.map(function(c,i){
+      return (padL+i*groupW+groupW/2)+","+(padT+plotH-s.by_category[c].hit_rate*plotH); }).join(" ");
+
+    var chart = el("svg",{width:"100%",viewBox:"0 0 "+W+" "+H,role:"img",
+      "aria-label":"TTFT versus end-to-end latency by category, with cache hit rate"},
+      grid,
+      el("text",{x:padL-58,y:padT+8,fill:"#8b949e","font-size":10},"ms"),
+      el("line",{x1:padL,x2:W-16,y1:y(TTFT_BUDGET_MS),y2:y(TTFT_BUDGET_MS),stroke:"#d29922","stroke-width":1.5,"stroke-dasharray":"6 4"}),
+      el("text",{x:W-16,y:y(TTFT_BUDGET_MS)-5,fill:"#d29922","font-size":10,"text-anchor":"end"},"TTFT budget "+TTFT_BUDGET_MS+"ms"),
+      el("line",{x1:padL,x2:W-16,y1:y(E2E_BUDGET_MS),y2:y(E2E_BUDGET_MS),stroke:"#f85149","stroke-width":1.5,"stroke-dasharray":"6 4"}),
+      el("text",{x:W-16,y:y(E2E_BUDGET_MS)-5,fill:"#f85149","font-size":10,"text-anchor":"end"},"e2e budget "+E2E_BUDGET_MS+"ms"),
+      bars,
+      el("polyline",{fill:"none",stroke:"#3fb950","stroke-width":2,points:line}),
+      el("g",null,
+        el("rect",{x:padL,y:H-14,width:10,height:10,fill:"#58a6ff"}),
+        el("text",{x:padL+14,y:H-5,fill:"#8b949e","font-size":10},"TTFT p95"),
+        el("rect",{x:padL+84,y:H-14,width:10,height:10,fill:"#a371f7"}),
+        el("text",{x:padL+98,y:H-5,fill:"#8b949e","font-size":10},"e2e p95"),
+        el("line",{x1:padL+160,x2:padL+176,y1:H-9,y2:H-9,stroke:"#3fb950","stroke-width":2}),
+        el("text",{x:padL+180,y:H-5,fill:"#8b949e","font-size":10},
+          "cache hit rate (right axis, overall "+Math.round(cached*100)+"%)")));
+
+    var layerRows = LAYER_ROWS.filter(function(kv){ return layers[kv[0]]!==undefined; }).map(function(kv){
+      var v=layers[kv[0]], share=e2eP95?Math.round(v/e2eP95*100):0;
+      return el("tr",{key:kv[0]},
+        el("td",null,kv[1]," ",el("code",null,kv[0])),
+        el("td",{style:{color:kv[0]==="retrieval"?"#f85149":"inherit"}},v+"ms"),
+        el("td",null,share+"%")); });
+
+    var budgetRows = (budget.checks||[]).map(function(c){
+      return el("tr",{key:c.name},
+        el("td",null,el("code",null,c.name), c.gated?null:el("span",{className:"mut"}," (note)")),
+        el("td",null,c.value_ms+"ms"), el("td",null,"≤ "+c.budget_ms+"ms"),
+        el("td",{style:{color:c.pass?"inherit":"#f85149"}},c.dominant_layer),
+        el("td",{style:{color:c.pass?"#3fb950":"#f85149"}},c.pass?"PASS":(c.gated?"FAIL":"note"))); });
+
+    var dualNote = el("p",{className:"mut"},
+      "Dual path: "+dual.fast_hits+" fast / "+dual.slow_misses+" slow · TTFT speedup "+dual.ttft_speedup+
+      "× · mean e2e saved "+dual.saved_mean_ms+"ms. Adversarial utterances are never served from cache ("+
+      num(cache.bypassed_adversarial)+" bypassed, "+
+      (cache.unsafe_served===0 ? "0 unsafe serves" : "UNSAFE SERVES")+").");
+    var layerTable = el("div",null,
+      el("h3",{className:"h3"},"Where the time goes (layer p95)"),
+      el("table",null,
+        el("thead",null,el("tr",null,["layer","p95","share of e2e"].map(function(h){return el("th",{key:h},h);}))),
+        el("tbody",null,layerRows)));
+    var budgetTable = el("div",null,
+      el("h3",{className:"h3"},"Budget verdict"),
+      el("table",null,
+        el("thead",null,el("tr",null,["check","value","budget","dominant layer",""].map(function(h){return el("th",{key:h},h);}))),
+        el("tbody",null,budgetRows)),
+      dualNote);
+
+    return el("div",null,
+      el("p",{className:"mut"},(d.source?d.source+" · ":"")+
+        "streamed on a deterministic fake clock — 1s chunks, no sleeping, no GPU, no API key. Budget: TTFT ≤ "+
+        TTFT_BUDGET_MS+"ms (fast path), e2e ≤ "+E2E_BUDGET_MS+"ms."),
+      el("div",{className:"kpi4"},
+        el(Kpi,{v:s.ttft_fast_ms.p95_ms,u:"ms",label:"TTFT p95 · fast path",good:s.ttft_fast_ms.p95_ms<=TTFT_BUDGET_MS}),
+        el(Kpi,{v:s.ttft_slow_ms.p95_ms,u:"ms",label:"TTFT p95 · slow path",good:s.ttft_slow_ms.p95_ms<=TTFT_BUDGET_MS}),
+        el(Kpi,{v:s.e2e_ms.p95_ms,u:"ms",label:"e2e p95 · served",good:s.e2e_ms.p95_ms<=E2E_BUDGET_MS}),
+        el(Kpi,{v:dual.speedup,u:"×",label:"cache e2e speedup",good:dual.speedup>=1})),
+      chart,
+      el("div",{className:"two"}, layerTable, budgetTable)); }
+
+  function App(){
+    var _s = React.useState(null), summary=_s[0], setSummary=_s[1];
+    var _r = React.useState([]), results=_r[0], setResults=_r[1];
+    var _t = React.useState("मेरा राशन कार्ड में नाम कैसे जुड़वाऊं"), text=_t[0], setText=_t[1];
+    var _l = React.useState([]), board=_l[0], setBoard=_l[1];
+    var _h = React.useState([]), hist=_h[0], setHist=_h[1];
+    var _b = React.useState(false), busy=_b[0], setBusy=_b[1];
+    var _e = React.useState(""), err=_e[0], setErr=_e[1];
+    var _a = React.useState(null), audioURL=_a[0], setAudioURL=_a[1];
+    var _x = React.useState(null), lat=_x[0], setLat=_x[1];
+
+    function loadLatency(){
+      fetch(API+"/latency").then(function(r){return r.json();}).then(function(d){ setLat(d); paintBudget(d); })
+      .catch(function(){ return fetch("mock_eval.json").then(function(r){return r.json();}).then(function(m){
+        if(m.summary && m.summary.stream) { var d2={stream:m.summary.stream, cache:m.summary.cache,
+          dual_path:m.summary.dual_path, budget:m.summary.budget, source:"offline snapshot (mock_eval.json)"};
+          setLat(d2); paintBudget(d2); }
+      }).catch(function(){}); });
+    }
+
+    function paintBudget(d){
+      var s=d&&d.stream; if(!s||!s.n) return;
+      var b=document.getElementById("budget");
+      var tf=s.ttft_fast_ms.p95_ms, e2=s.e2e_ms.p95_ms, hr=(d.cache&&d.cache.hit_rate)||0;
+      var ok = tf<=400 && e2<=1200;
+      b.textContent="TTFT p95 "+tf+"ms ≤400 · e2e p95 "+e2+"ms ≤1200 · cache hit "+Math.round(hr*100)+"%";
+      b.className="pill "+(ok?"ok":"bad");
+    }
+
+    function refresh(){
+      fetch(API+"/health").then(function(r){return r.json();}).then(function(h){
+        document.getElementById("health").textContent="backend: "+h.engine+" · golden n="+h.golden_n;
+        document.getElementById("health").className="pill ok";
+      }).catch(function(){ document.getElementById("health").textContent="backend: offline — start with: uvicorn app.main:app"; document.getElementById("health").className="pill bad"; });
+      fetch(API+"/leaderboard").then(function(r){return r.json();}).then(function(b){ setBoard(b.rows||[]); setHist(b.history||[]); }).catch(function(){});
+    }
+    React.useEffect(function(){ refresh(); loadLatency(); },[]);
+
+    function runEval(){
+      setBusy(true); setErr("");
+      fetch(API+"/eval",{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({seed:7,engine:"mock",stream:true})}).then(function(r){return r.json();}).then(function(d){
+        setSummary(d.summary); setResults(d.results);
+        if(d.summary.stream) setLat({stream:d.summary.stream, cache:d.summary.cache,
+          dual_path:d.summary.dual_path, budget:d.summary.budget, source:"live (/eval stream:true)"});
+        var g=document.getElementById("gate");
+        var pass=d.summary.mean_wer<=0.25 && d.summary.latency.p95_ms<=1200;
+        g.textContent="gate: "+(pass?"PASS":"FAIL")+" (wer "+d.summary.mean_wer+" ≤0.25, p95 "+d.summary.latency.p95_ms+"ms ≤1200ms)";
+        g.className="pill "+(pass?"ok":"bad"); refresh(); loadLatency();
+      }).catch(function(e){ setErr("Eval failed: "+e+". Is the backend running on :8000?"); }).finally(function(){ setBusy(false); });
+    }
+    function scoreText(){
+      setBusy(true); setErr("");
+      fetch(API+"/eval",{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({seed:7,stream:true,items:[{id:"adhoc",expected:text,hypothesis:"",difficulty:"medium",lang:"hi"}]})}).then(function(r){return r.json();}).then(function(d){
+        setSummary(d.summary); setResults(d.results);
+      }).catch(function(e){ setErr("Score failed: "+e); }).finally(function(){ setBusy(false); });
+    }
+    function uploadAudio(ev){
+      var f=ev.target.files[0]; if(!f) return; setBusy(true); setErr("");
+      var fd=new FormData(); fd.append("file",f);
+      fetch(API+"/transcribe",{method:"POST",body:fd}).then(function(r){return r.json();}).then(function(d){
+        setErr(""); setSummary({note:JSON.stringify(d)});
+      }).catch(function(e){ setErr("Upload failed: "+e); }).finally(function(){ setBusy(false); });
+    }
+    function synth(){
+      setBusy(true); setErr("");
+      fetch(API+"/tts",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:text})}).then(function(r){return r.json();}).then(function(d){
+        var bin=atob(d.audio_b64), arr=new Uint8Array(bin.length);
+        for(var i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
+        var url=URL.createObjectURL(new Blob([arr],{type:"audio/wav"})); setAudioURL(url);
+      }).catch(function(e){ setErr("TTS failed: "+e); }).finally(function(){ setBusy(false); });
+    }
+
+  var kpi = summary && summary.n ? el("div",{className:"kpi"},
+      el("div",null,el("b",null,summary.mean_wer),"mean WER"),
+      el("div",null,el("b",null,summary.mean_cer),"mean CER"),
+      el("div",null,el("b",null,summary.latency.p95_ms+"ms"),"p95 latency"),
+      summary.stream?el("div",null,el("b",null,summary.stream.ttft_fast_ms.p95_ms+"ms"),"TTFT p95 (fast)"):
+        el("div",null,el("b",null,"$"+summary.cost_usd),"cost / "+summary.n+" evals")) : null;
+
+    function dArrow(d){ // delta vs previous run: ▼ better (green), ▲ worse (red)
+      if(d===null||d===undefined||d===0) return el("span",{className:"mut"},"—");
+      var better=d<0;
+      return el("span",{style:{color:better?"#3fb950":"#f85149"}},(better?"▼ ":"▲ ")+(d>0?"+":"")+d); }
+    function histRows(){
+      return hist.map(function(h,i){
+        var p=i>0?hist[i-1]:null;
+        function d(k){ if(!p||h[k]===undefined||p[k]===undefined) return null;
+          return Math.round((h[k]-p[k])*10000)/10000; }
+        var when=h.ts?new Date(h.ts*1000).toLocaleString():"#"+i;
+        return el("tr",{key:i},el("td",{className:"mut"},when),
+          el("td",null,(h.model||"?")+" s"+h.seed),
+          el("td",null,h.mean_wer," ",dArrow(d("mean_wer"))),
+          el("td",null,h.mean_cer," ",dArrow(d("mean_cer"))),
+          el("td",null,h.p95_ms," ",dArrow(d("p95_ms"))),
+          el("td",null,h.pass?"PASS":"FAIL")); }); }
+
+    return el(React.Fragment,null,
+      el("section",{className:"card"},
+        el("h2",null,"1 · Paste Hindi text → score"),
+        el("textarea",{rows:3,value:text,onChange:function(e){setText(e.target.value);}}),
+        el("div",{className:"row"},
+          el("button",{onClick:scoreText,disabled:busy},"Score text"),
+          el("button",{className:"ghost",onClick:synth,disabled:busy},"🔊 Mock TTS")),
+        audioURL?el("audio",{controls:true,src:audioURL}):null,
+        el("p",{className:"mut"},"Mock ASR re-generates a hypothesis with difficulty-weighted noise; WER/CER computed locally.")),
+      el("section",{className:"card"},
+        el("h2",null,"2 · Upload audio → /transcribe"),
+        el("input",{type:"file",accept:"audio/*",onChange:uploadAudio}),
+        el("p",{className:"mut"},"Mock mode never pretends to hear: it returns engine=mock + latency. Opt into faster-whisper with VACHAN_REAL_ASR=1."),
+        el("div",{className:"row"},el("button",{onClick:runEval,disabled:busy},"▶ Run full 30-utterance eval"))),
+      err?el("p",{className:"card full err"},err):null,
+      summary&&summary.n?el("section",{className:"card full"},
+        el("h2",null,"Eval summary (run #"+(summary.run_id||"")+" · seed "+summary.seed+")"),kpi,
+        el(LatChart,{results:results,summary:summary})):null,
+      el("section",{className:"card full"},
+        el("h2",null,"Latency (v3) — TTFT vs e2e per category + cache hit rate"),
+        el("p",{className:"mut"},"Streaming STT on a deterministic fake clock (1s chunks). "+
+          "Dual path: near-duplicates answer from the semantic cache, everything else pays the retrieval round trip."),
+        el(LatencySection,{data:lat})),
+      results.length?el("section",{className:"card full"},
+        el("h2",null,"Per-utterance results"),
+        el("table",null,el("thead",null,el("tr",null,["id","lang","diff","path","WER","CER","lat ms","TTFT ms","e2e ms","hypothesis"].map(function(h){return el("th",{key:h},h);}))),
+        el("tbody",null,results.map(function(r){return el("tr",{key:r.id},
+          el("td",null,r.id),el("td",null,r.lang),el("td",null,r.difficulty),
+          el("td",{style:{color:r.path==="fast"?"#3fb950":(r.path==="slow"?"#d29922":"inherit")}},r.path||"—"),
+          el("td",{style:{color:r.wer>0.5?"#f85149":"inherit"}},r.wer),el("td",null,r.cer),el("td",null,r.latency_ms),
+          el("td",null,r.ttft_ms===undefined?"—":r.ttft_ms),el("td",null,r.e2e_ms===undefined?"—":r.e2e_ms),
+          el("td",{className:"mut"},r.hypothesis));})))):null,
+      el("section",{className:"card full"},
+        el("h2",null,"Leaderboard"),
+        el("table",null,el("thead",null,el("tr",null,["system","mean WER","p95 ms","source"].map(function(h){return el("th",{key:h},h);}))),
+        el("tbody",null,board.map(function(b,i){return el("tr",{key:i},el("td",null,b.name),el("td",null,b.mean_wer),el("td",null,b.p95_ms),el("td",{className:"mut"},b.source));})))),
+      el("section",{className:"card full"},
+        el("h2",null,"Run history (Δ vs previous run)"),
+        hist.length?el("table",null,el("thead",null,el("tr",null,["run","model","mean WER Δ","mean CER Δ","p95 ms Δ","gate"].map(function(h){return el("th",{key:h},h);}))),
+        el("tbody",null,histRows())):el("p",{className:"mut"},"No runs yet — `python eval/run.py --seed 7` appends here.")));
+  }
+
+  function boot(){
+    // The Vite bundle (deferred module) always runs before DOMContentLoaded,
+    // so this check is deterministic: if it took the page, stand down.
+    if (window.__VACHAN_ENTRY__ === "vite") return;
+    if (window.React && window.ReactDOM){
+      ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
+    } else { // offline fallback: plain-JS minimal UI so `python -m http.server` demo never blanks
+      document.getElementById("root").innerHTML =
+        '<section class="card"><h2>Offline fallback</h2><p class="mut">React CDN unreachable. Backend still works:</p>'+
+        '<pre>pip install -r requirements.txt\nuvicorn app.main:app --port 8000\npython eval/run.py --stream</pre>'+
+        '<p class="mut">Then GET <code>/latency</code> for the realtime report and <code>/docs</code> for the API.</p></section>';
+      fetch((location.port==="8000"?"":"http://localhost:8000")+"/health").then(function(r){return r.json();}).then(function(h){
+        document.getElementById("health").textContent="backend: "+h.engine; });
+    }
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot); else boot();
+})();
+</script>
+</body>
+</html>
