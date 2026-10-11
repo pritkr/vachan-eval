@@ -1,0 +1,24 @@
+name: eval-gate
+on:
+  push:
+  pull_request:
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - run: python -m pytest -q
+      - run: python eval/run.py --seed 7
+      # v3 realtime gate: streaming STT on a fake clock + semantic cache.
+      # Fails (exit 1) if fast-path TTFT p95 > 400ms or served e2e p95 > 1200ms,
+      # and prints the layer that breached when it does.
+      - run: python eval/run.py --seed 7 --stream --budget
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eval-results
+          path: eval/results.*
